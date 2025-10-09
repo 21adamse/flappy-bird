@@ -14,10 +14,12 @@ background=pygame.image.load("Images/flappybackground.png")
 floor=pygame.image.load("Images/flappyfloor.png")
 floorx=0
 movespeed=4
-pipegap=175
+pipegap=160
 pipefrequency=2000
 lastpipe=pygame.time.get_ticks() - pipefrequency
 passpipe=False
+score = 0
+font = "Bauhaus"
 
 clock = pygame.time.Clock()
 
@@ -78,6 +80,20 @@ class Pipe(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()
 
+def drawtext(text,colour,x,y):
+    font1=pygame.font.SysFont(font,60)
+    text1 = font1.render(text,True,colour)
+    screen.blit(text1,(x,y))
+
+def restart():
+    global score,gameover,flying
+    score=0
+    gameover=False
+    pipegroup.empty()
+    birdgroup.empty()
+    bird=Bird(80,280)
+    birdgroup.add(bird)
+
 birdgroup=pygame.sprite.Group()
 bird=Bird(80,280)
 birdgroup.add(bird)
@@ -88,8 +104,8 @@ while run:
     birdgroup.draw(screen)
     pipegroup.draw(screen)
     screen.blit(floor,(floorx,630))
-    
-    if bird.rect.bottom >= 625 or bird.rect.top < 0:
+    drawtext("Score:"+str(score),"white",WIDTH/2-70,30)
+    if birdgroup.sprites()[0].rect.bottom >= 625 or birdgroup.sprites()[0].rect.top < 0:
         gameover = True
         flying = False
     if gameover == False and flying:
@@ -103,11 +119,14 @@ while run:
             pipegroup.add(bottompipe)
             lastpipe = currenttime
         pipegroup.update()
-
         floorx=floorx-movespeed
         if floorx<-50:
             floorx=0
-    
+    elif gameover == True:
+        drawtext("Gameover","red",WIDTH/2-105,HEIGHT/2-40)
+        drawtext("Press space to restart","white",WIDTH/2-220,HEIGHT/2+10)
+    if pygame.sprite.groupcollide(birdgroup,pipegroup,False,False):
+        gameover=True
     if len(pipegroup) > 0:
         if birdgroup.sprites()[0].rect.left > pipegroup.sprites()[0].rect.left\
         and birdgroup.sprites()[0].rect.right < pipegroup.sprites()[0].rect.right\
@@ -122,6 +141,10 @@ while run:
             run=False
         if event.type == pygame.MOUSEBUTTONDOWN and flying == False and gameover == False:
             flying = True
+        if event.type == pygame.KEYDOWN:
+            if gameover == True:
+                if event.key == pygame.K_SPACE:
+                    restart()
 
     pygame.display.update()
 pygame.quit()
